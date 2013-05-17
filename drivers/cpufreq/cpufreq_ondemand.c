@@ -1635,6 +1635,10 @@ static int dbs_sync_thread(void *data)
 
 		get_online_cpus();
 
+		this_dbs_info->prev_cpu_idle = get_cpu_idle_time(cpu,
+				&this_dbs_info->prev_cpu_wall, dbs_tuners_ins.io_is_busy);
+	}
+
 		src_cpu = atomic_read(&this_dbs_info->src_sync_cpu);
 		src_dbs_info = &per_cpu(od_cpu_dbs_info, src_cpu);
 		if (src_dbs_info != NULL &&

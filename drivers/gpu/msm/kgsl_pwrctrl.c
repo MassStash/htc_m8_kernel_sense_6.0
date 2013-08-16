@@ -441,16 +441,18 @@ static int kgsl_pwrctrl_gpuclk_show(struct device *dev,
 	unsigned long freq;
 	struct kgsl_device *device = kgsl_device_from_dev(dev);
 	struct kgsl_pwrctrl *pwr;
+	unsigned int level;
+
 	if (device == NULL)
 		return 0;
 	pwr = &device->pwrctrl;
 
 	if (device->state == KGSL_STATE_SLUMBER)
-		freq = pwr->pwrlevels[pwr->num_pwrlevels - 1].gpu_freq;
+		level = pwr->num_pwrlevels - 1;
 	else
-		freq = kgsl_pwrctrl_active_freq(pwr);
-
-	return snprintf(buf, PAGE_SIZE, "%lu\n", freq);
+		level = pwr->active_pwrlevel;
+	return snprintf(buf, PAGE_SIZE, "%d\n",
+			pwr->pwrlevels[level].gpu_freq);
 }
 
 static int kgsl_pwrctrl_idle_timer_store(struct device *dev,

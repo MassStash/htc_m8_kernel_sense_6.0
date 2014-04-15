@@ -535,10 +535,6 @@ static void get_krait_bin_format_b(struct platform_device *pdev,
 	/* Check PVS_BLOW_STATUS */
 	pte_efuse = readl_relaxed(base + 0x4) & BIT(21);
 	if (pte_efuse) {
-
-		//elementalx
-		pvs_number = *pvs;
-
 		dev_info(&pdev->dev, "PVS bin: %d\n", *pvs);
 	} else {
 		dev_warn(&pdev->dev, "PVS bin not set. Defaulting to 0!\n");
@@ -714,6 +710,44 @@ static void krait_update_uv(int *uv, int num, int boost_uv)
 		break;
 	case 3:
 		uv[1] -= 45000;
+		break;
+	}
+}
+
+	switch (arg_vdd_uv) {
+
+	if (speed == 3 && arg_cpu_oc <= 2457600) {
+		printk("elementalx: uv=%d freq=%lu ua=%d\n", uv[num-1], freq[num-1]/1000, ua[num-1]);
+		return;
+	}
+
+	freq[num-1] = arg_cpu_oc*1000;
+
+	switch (arg_cpu_oc) {
+
+	case 2342400:
+		ua[num-1] = 751;
+		uv[num-1] = min(1200000, uv[num-1] + 15000);
+		break;
+	case 2457600:
+		ua[num-1] = 802;
+		uv[num-1] = min(1200000, uv[num-1] + 35000);
+		break;
+	case 2572800:
+		ua[num-1] = 831;
+		uv[num-1] = min(1200000, uv[num-1] + 50000);
+		break;
+	case 2649600:
+		ua[num-1] = 866;
+		uv[num-1] = min(1200000, uv[num-1] + 65000);
+		break;
+	case 2726400:
+		ua[num-1] = 900;
+		uv[num-1] = min(1200000, uv[num-1] + 80000);
+		break;
+	case 2803200:
+		ua[num-1] = 937;
+		uv[num-1] = min(1200000, uv[num-1] + 95000);
 		break;
 	}
 }

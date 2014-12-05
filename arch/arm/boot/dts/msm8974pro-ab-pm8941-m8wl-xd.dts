@@ -14,30 +14,23 @@
 
 /include/ "msm8974pro-ab-pm8941.dtsi"
 /include/ "msm8974-m8-common.dtsi"
-/include/ "msm8974-camera-sensor-m8-ver-a.dtsi"
-/include/ "msm8974-m8whl-xb-pmicgpio.dtsi"
-/include/ "msm8974-touch-fw-2key-config.dtsi"
+/include/ "msm8974-camera-sensor-m8-ver-b.dtsi"
+/include/ "msm8974-m8wl-xb-pmicgpio.dtsi"
+/include/ "msm8974-touch-fw-0key-config.dtsi"
 /include/ "msm8974-m8-storage.dtsi"
 
 / {
-	model = "M8 WHL XB/XC";
-	compatible = "htc,msm8974", "htc,m8whl", "qcom,msm8974-mtp", "qcom,msm8974", "qcom,mtp";
-	htc,project-id = <267 1 0x10000>,
-			<267 2 0x10000>;
+	model = "M8 WL XD";
+	compatible = "htc,msm8974", "htc,m8wl", "qcom,msm8974-mtp", "qcom,msm8974", "qcom,mtp";
+	htc,project-id = <266 3 0x10000>;
 
 };
 
-&soc {
-	i2c@f9924000 {
-		synaptics@20 {
-			support_htc_event = <1>;
-		};
-	};
+&krait_pdn {
+	qcom,use-phase-switching;
 };
 
 &pm8941_lsid1 {
-<<<<<<< HEAD
-=======
 	pwm@b200 {
 		qcom,lpg {
 			cell-index = <1>;
@@ -55,7 +48,6 @@
 			qcom,lpg-lut-enable-pause-lo = <1>;
 		};
 	};
->>>>>>> 0649fde... Add dts files for all-variant support
 	qcom,leds@d000 {
 		status = "okay";
 		qcom,rgb_0 {

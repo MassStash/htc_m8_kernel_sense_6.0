@@ -76,6 +76,8 @@ echo
 echo
 echo " Makin thangs squeaky clean "
 make clean
+rm arch/arm/boot/dt.img
+
 #Change arm-eabi- to what you current toolchain uses default is gcc4.6 & gcc4.7 toolchains
 echo
 echo
@@ -89,7 +91,8 @@ echo " Done compiling your kernel bitch "
 echo
 echo
 echo " Compiling dt.img brah "
-./dtb -o arch/arm/boot/dt.img -s 2048 -d "htc,project-id = <" -p ./scripts/dtc/ ./arch/arm/boot/
+#./dtb -o arch/arm/boot/dt.img -s 2048 -d "htc,project-id = <" -p ./scripts/dtc/ ./arch/arm/boot/
+./dtbToolCM -o arch/arm/boot/dt.img -s 2048 -d "htc,project-id = <" -p ./scripts/dtc/ ./arch/arm/boot/
 
 echo
 echo

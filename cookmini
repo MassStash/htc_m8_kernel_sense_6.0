@@ -4,13 +4,13 @@ NUMCORES=`getconf _NPROCESSORS_ONLN`
 JSYNC=`echo $(( $NUMCORES * 2 ))`         
 
 #Setup proper path to rid missing gcc warning
-PATH=$PATH:/home/zaitower/AndroidDev/AAtoolchains/linaro_toolchains/Christopher83_arm-cortex_a15-linux-gnueabihf-linaro_4.9/bin
+PATH=$PATH:/home/zaichron-lin/AndroidDev/AAtoolchains/linaro_toolchains/Christopher83_arm-cortex_a15-linux-gnueabihf-linaro_4.9/bin
 
 #xxx= Your config name
 echo
 echo
 echo " Run defconfig "
-make ARCH=arm elementalx_defconfig
+make ARCH=arm hypernova_defconfig
 #Keep thangs sqeaky
 echo
 echo
@@ -21,6 +21,6 @@ rm arch/arm/boot/dt.img
 echo
 echo
 echo " Set to arm at 375, for about 20 to 40 minutes "
-make ARCH=arm CROSS_COMPILE=/home/zaitower/AndroidDev/AAtoolchains/linaro_toolchains/Christopher83_arm-cortex_a15-linux-gnueabihf-linaro_4.9/bin/arm-cortex_a15-linux-gnueabihf- -j$JSYNC
+make ARCH=arm CROSS_COMPILE=/home/zaichron-lin/AndroidDev/AAtoolchains/linaro_toolchains/Christopher83_arm-cortex_a15-linux-gnueabihf-linaro_4.9/bin/arm-cortex_a15-linux-gnueabihf- -j$JSYNC
 
 ./dtbToolCM -o arch/arm/boot/dt.img -s 2048 -d "htc,project-id = <" -p ./scripts/dtc/ ./arch/arm/boot/

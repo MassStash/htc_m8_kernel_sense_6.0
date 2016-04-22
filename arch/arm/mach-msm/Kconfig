@@ -3184,11 +3184,11 @@ config PROJECT_NAME
         help
           Support for Project Name
 
-config MACH_M8_WHL
+config MACH_M8
         depends on ARCH_MSM8974
-        bool "MSM8974 M8_WHL"
+        bool "MSM8974 M8"
         help
-          Support for HTC MSM8974 M8_WHL
+          Support for HTC MSM8974 M8
 
 endif
 

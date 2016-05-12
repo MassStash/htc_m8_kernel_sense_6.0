@@ -165,7 +165,7 @@ u64 get_cpu_idle_time(unsigned int cpu, u64 *wall, int io_busy)
 }
 EXPORT_SYMBOL_GPL(get_cpu_idle_time);
 
-static struct cpufreq_policy *cpufreq_cpu_get(unsigned int cpu, int sysfs)
+static struct cpufreq_policy *__cpufreq_cpu_get(unsigned int cpu, int sysfs)
 {
 	struct cpufreq_policy *data;
 	unsigned long flags;
@@ -202,16 +202,35 @@ err_out_unlock:
 err_out:
 	return NULL;
 }
+
+struct cpufreq_policy *cpufreq_cpu_get(unsigned int cpu)
+{
+	return __cpufreq_cpu_get(cpu, 0);
+}
 EXPORT_SYMBOL_GPL(cpufreq_cpu_get);
 
+static struct cpufreq_policy *cpufreq_cpu_get_sysfs(unsigned int cpu)
+{
+	return __cpufreq_cpu_get(cpu, 1);
+}
+
+static void __cpufreq_cpu_put(struct cpufreq_policy *data, int sysfs)
+{
+	if (!sysfs)
+		kobject_put(&data->kobj);
+	module_put(cpufreq_driver->owner);
+}
 
 void cpufreq_cpu_put(struct cpufreq_policy *data)
 {
-	kobject_put(&data->kobj);
-	module_put(cpufreq_driver->owner);
+	__cpufreq_cpu_put(data, 0);
 }
 EXPORT_SYMBOL_GPL(cpufreq_cpu_put);
 
+static void cpufreq_cpu_put_sysfs(struct cpufreq_policy *data)
+{
+	__cpufreq_cpu_put(data, 1);
+}
 
 
 #ifndef CONFIG_SMP
@@ -631,25 +650,12 @@ static ssize_t show(struct kobject *kobj, struct attribute *attr, char *buf)
 	struct cpufreq_policy *policy = to_policy(kobj);
 	struct freq_attr *fattr = to_attr(attr);
 	ssize_t ret = -EINVAL;
-	unsigned long flags;
-
-	spin_lock_irqsave(&cpufreq_driver_lock, flags);
-
-	if (!cpufreq_driver) {
-		spin_unlock_irqrestore(&cpufreq_driver_lock, flags);
-		return ret;
-	}
-
-	policy = per_cpu(cpufreq_cpu_data, policy->cpu);
-	if (!policy) {
-		spin_unlock_irqrestore(&cpufreq_driver_lock, flags);
-		return ret;
-	}
-
-	spin_unlock_irqrestore(&cpufreq_driver_lock, flags);
+	policy = cpufreq_cpu_get_sysfs(policy->cpu);
+	if (!policy)
+		goto no_policy;
 
 	if (lock_policy_rwsem_read(policy->cpu) < 0)
-		return ret;
+		goto fail;
 
 	if (fattr->show)
 		ret = fattr->show(policy, buf);
@@ -657,6 +663,9 @@ static ssize_t show(struct kobject *kobj, struct attribute *attr, char *buf)
 		ret = -EIO;
 
 	unlock_policy_rwsem_read(policy->cpu);
+fail:
+	cpufreq_cpu_put_sysfs(policy);
+no_policy:
 	return ret;
 }
 
@@ -666,25 +675,12 @@ static ssize_t store(struct kobject *kobj, struct attribute *attr,
 	struct cpufreq_policy *policy = to_policy(kobj);
 	struct freq_attr *fattr = to_attr(attr);
 	ssize_t ret = -EINVAL;
-	unsigned long flags;
-
-	spin_lock_irqsave(&cpufreq_driver_lock, flags);
-
-	if (!cpufreq_driver) {
-		spin_unlock_irqrestore(&cpufreq_driver_lock, flags);
-		return ret;
-	}
-
-	policy = per_cpu(cpufreq_cpu_data, policy->cpu);
-	if (!policy) {
-		spin_unlock_irqrestore(&cpufreq_driver_lock, flags);
-		return ret;
-	}
-
-	spin_unlock_irqrestore(&cpufreq_driver_lock, flags);
+	policy = cpufreq_cpu_get_sysfs(policy->cpu);
+	if (!policy)
+		goto no_policy;
 
 	if (lock_policy_rwsem_write(policy->cpu) < 0)
-		return ret;
+		goto fail;
 
 	if (fattr->store)
 		ret = fattr->store(policy, buf, count);
@@ -692,6 +688,9 @@ static ssize_t store(struct kobject *kobj, struct attribute *attr,
 		ret = -EIO;
 
 	unlock_policy_rwsem_write(policy->cpu);
+fail:
+	cpufreq_cpu_put_sysfs(policy);
+no_policy:
 	return ret;
 }
 

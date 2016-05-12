@@ -43,6 +43,9 @@ static struct clk *cpu_clk[NR_CPUS];
 static struct clk *l2_clk;
 static DEFINE_PER_CPU(struct cpufreq_frequency_table *, freq_table);
 static bool hotplug_ready;
+#ifdef CONFIG_MSM_CPU_VOLTAGE_CONTROL
+static struct cpufreq_frequency_table *krait_freq_table;
+#endif
 
 struct cpufreq_suspend_t {
 	struct mutex suspend_mutex;
@@ -66,16 +69,6 @@ static int set_cpu_freq(struct cpufreq_policy *policy, unsigned int new_freq,
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
 	unsigned long rate;
 
-	/*
-	 * The cpu_clk[1..NR_CPUS] are not initialized at sync-cpu platform,
-	 * so for core1~coreN, they don't need to execute this function.
-	 */
-	if (policy->cpu >= 1 && is_sync)
-		return 0;
-
-#ifdef CONFIG_ARCH_MSM8974
-	mutex_lock(&set_cpufreq_lock);
-#endif
 	freqs.old = policy->cur;
 	freqs.new = new_freq;
 	freqs.cpu = policy->cpu;
@@ -94,29 +87,6 @@ static int set_cpu_freq(struct cpufreq_policy *policy, unsigned int new_freq,
 	cpufreq_notify_transition(policy, &freqs, CPUFREQ_PRECHANGE);
 
 	trace_cpu_frequency_switch_start(freqs.old, freqs.new, policy->cpu);
-
-	if (is_clk) {
-		unsigned long rate = new_freq * 1000;
-#ifdef CONFIG_HTC_DEBUG_FOOTPRINT
-		set_acpuclk_footprint(policy->cpu, ACPU_ENTER);
-		set_acpuclk_cpu_freq_footprint(FT_PREV_RATE, policy->cpu, policy->cur * 1000);
-		set_acpuclk_cpu_freq_footprint(FT_NEW_RATE, policy->cpu, rate);
-#endif
-		rate = clk_round_rate(cpu_clk[policy->cpu], rate);
-		ret = clk_set_rate(cpu_clk[policy->cpu], rate);
-		if (!ret) {
-#ifdef CONFIG_HTC_DEBUG_FOOTPRINT
-			set_acpuclk_footprint(policy->cpu, ACPU_BEFORE_UPDATE_L2_BW);
-#endif
-			freq_index[policy->cpu] = index;
-			update_l2_bw(NULL);
-		}
-#ifdef CONFIG_HTC_DEBUG_FOOTPRINT
-		set_acpuclk_footprint(policy->cpu, ACPU_LEAVE);
-#endif
-	} else {
-		ret = acpuclk_set_rate(policy->cpu, new_freq, SETRATE_CPUFREQ);
-	}
 
 	rate = new_freq * 1000;
 	rate = clk_round_rate(cpu_clk[policy->cpu], rate);
@@ -431,12 +401,13 @@ static struct cpufreq_frequency_table *cpufreq_parse_dt(struct device *dev,
 	krait_freq_table = devm_kzalloc(dev, (nf + 1) * sizeof(*krait_freq_table),
 					GFP_KERNEL);
 	if (!krait_freq_table)
-		return -ENOMEM;
+		return ERR_PTR(-ENOMEM);
 
-	*krait_freq_table = *freq_table;
+	*krait_freq_table = *ftbl;
 
-	for (i = 0, j = 0; i < nf; i++, j += 3)
-		krait_freq_table[i].frequency = data[j];
+	for (i = 0; i < nf; i++)
+		krait_freq_table[i].frequency = data[i];
+
 	krait_freq_table[i].frequency = CPUFREQ_TABLE_END;
 #endif
 

@@ -58,7 +58,9 @@ extern struct tvec_base boot_tvec_bases;
  * the timer will be serviced when the CPU eventually wakes up with a
  * subsequent non-deferrable timer.
  */
-#define TBASE_DEFERRABLE_FLAG		(0x1)
+#define TIMER_DEFERRABLE		0x1LU
+
+#define TIMER_FLAG_MASK			0x1LU
 
 #define __TIMER_INITIALIZER(_function, _expires, _data, _flags) { \
 		.entry = { .prev = TIMER_ENTRY_STATIC },	\

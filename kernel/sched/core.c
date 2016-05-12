@@ -83,6 +83,7 @@
 
 #include "sched.h"
 #include "../workqueue_sched.h"
+#include "../smpboot.h"
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/sched.h>
@@ -5065,11 +5066,6 @@ void sched_show_task(struct task_struct *p)
 
 void show_state_filter(unsigned long state_filter)
 {
-	show_thread_group_state_filter(NULL, state_filter);
-}
-
-void show_thread_group_state_filter(const char *tg_comm, unsigned long state_filter)
-{
 	struct task_struct *g, *p;
 
 #if BITS_PER_LONG == 32
@@ -5086,11 +5082,9 @@ void show_thread_group_state_filter(const char *tg_comm, unsigned long state_fil
 		 * console might take a lot of time:
 		 */
 		touch_nmi_watchdog();
-		if (!tg_comm || (tg_comm && !strncmp(tg_comm, g->comm, TASK_COMM_LEN))) {
-			if (!state_filter || (p->state & state_filter))
-				sched_show_task(p);
-		}
-	} while_each_thread(g, p);
+		if (!state_filter || (p->state & state_filter))
+			sched_show_task(p);
+	}
 
 	touch_all_softlockup_watchdogs();
 

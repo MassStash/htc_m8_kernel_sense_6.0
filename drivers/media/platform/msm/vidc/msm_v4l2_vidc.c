@@ -20,6 +20,7 @@
 #include <linux/debugfs.h>
 #include <linux/version.h>
 #include <linux/slab.h>
+#include <linux/pm_qos.h>
 #include <mach/board.h>
 #include <mach/iommu.h>
 #include <mach/iommu_domains.h>
@@ -33,6 +34,7 @@
 
 #define BASE_DEVICE_NUMBER 32
 
+static struct pm_qos_request msm_v4l2_vidc_pm_qos_request;
 struct msm_vidc_drv *vidc_driver;
 
 uint32_t msm_vidc_pwr_collapse_delay = 10000;

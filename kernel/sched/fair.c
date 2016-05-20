@@ -3797,10 +3797,10 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 			int local_group, const struct cpumask *cpus,
 			int *balance, struct sg_lb_stats *sgs,
 			bool *overload)
-	unsigned int balance_cpu = -1, first_idle_cpu = 0;
-	unsigned long balance_load = ~0UL;
+{
 	unsigned long nr_running, max_nr_running, min_nr_running;
 	unsigned long load, max_cpu_load, min_cpu_load;
+	unsigned int balance_cpu = -1, first_idle_cpu = 0;
 	unsigned long avg_load_per_task = 0;
 	int i;
 
@@ -3820,11 +3820,12 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 
 		/* Bias balancing toward cpus of our domain */
 		if (local_group) {
-			load = target_load(i, load_idx);
-			if (load < balance_load || idle_cpu(i)) {
-				balance_load = load;
+			if (idle_cpu(i) && !first_idle_cpu) {
+				first_idle_cpu = 1;
 				balance_cpu = i;
 			}
+
+			load = target_load(i, load_idx);
 		} else {
 			load = source_load(i, load_idx);
 			if (load > max_cpu_load)
